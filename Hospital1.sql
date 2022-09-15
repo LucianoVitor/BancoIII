@@ -45,11 +45,12 @@ insert into pacientes (nome,sexo,obito) VALUES ('Donald Knuth','m',false);
 insert into pacientes (nome,sexo,obito) VALUES ('Grace Hopper','f',false);
 insert into pacientes (nome,sexo,obito) VALUES ('Dennis Ritchie','m',false);
 
+
+update consultas set especialidade_id = 2 where especialidade_id = 1;
+update consultas set especialidade_id = 1 where especialidade_id = 2;
 insert into consultas (especialidade_id,pac_id,profiss_id) values (1,1,1);
+insert into consultas (especialidade_id,pac_id,profiss_id) values (2,2,2);
 
-
-ALTER TABLE consultas ADD COLUMN last_user_updated varchar(100);
-ALTER TABLE consultas ADD COLUMN last_time_updated timestamp;
 
 CREATE OR REPLACE FUNCTION trgValidaDadosConsulta() returns trigger as $trgValidaDadosConsulta$
 
@@ -58,29 +59,9 @@ pac_row record;
 espec_row record;
 
 begin
-    if NEW.especialidade_id is null then
-	RAISE EXCEPTION 'Especialdide_id nao informada.';
-END if;
-    if NEW.pac_id is null then
-RAISE EXCEPTION 'consulta precisa de paciente';
-end if;
+  
+	RAISE NOTICE 'TRIGGER FOI VALIDADA COM SUCESSO.';
 	
-     if NEW.profiss_id is null then
-	RAISE EXCEPTION 'INDICAR qual a profissao';
-END IF;
-	
-	SELECT INTO pac_row * from pacientes as p where p.id = NEW.especialidade_id;
-
-	SELECT INTO espec_row * from especialidades as esp where esp.id = NEW.especialidade_id;
-
-	if pac_row.sexo = 'm' AND espec_row.nome = 'ginecologista' THEN
-	RAISE EXCEPTION 'gINECOLOGISTA APENAS PARA pacientes femininos';
-	ELSEIF pac_row.sexo = 'f' AND espec_row.nome = 'urologista' THEN
-	RAISE EXCEPTION 'Urologista apenas para pacientes masculinos';
-	END IF;
-
-	NEW.last_time_updated := current_timestamp;
-	NEW.last_user_updated := 'nomeDoUsuario';
 	RETURN NEW;
 END;
 $trgValidaDadosConsulta$ LANGUAGE plpgsql;
@@ -88,7 +69,9 @@ $trgValidaDadosConsulta$ LANGUAGE plpgsql;
 create TRIGGER trgValidaDadosConsulta
 BEFORE INSERT OR UPDATE ON consultas
 FOR EACH ROW 
-EXECUTE PROCEDURE ValidaDadosConsulta();
+EXECUTE PROCEDURE trgValidaDadosConsulta();
+
+
 
 select * from pacientes;
 select * from especialidades;
